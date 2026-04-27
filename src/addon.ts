@@ -67,7 +67,7 @@ async function handleStream(type: string, id: string, userConfig: UserConfig): P
         } catch { }
 
         // VixSrc
-        const vixStreams = await getVixSrcStreams(tmdbId, season, episode, 'ar');
+        const streams = await getVixSrcStreams(args.id, args.type);
         for (const s of vixStreams) {
             s.name = 'VixSrc 🇸🇦';
             s.title = `🎬 ${mediaTitle}\n🔊 صوت عربي/إنجليزي`;
