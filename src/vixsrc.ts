@@ -113,12 +113,18 @@ export async function getVixSrcStreams(tmdbId: string, season?: string, episode?
         // 3. Construct final stream URL
         const canPlayFHD = /window\.canPlayFHD\s*=\s*true/i.test(scriptContent) || /canPlayFHD/.test(scriptContent);
         
-        const urlObj = new URL(serverUrl);
+        // الأفضل جعلها تحاول جلب العربية، وإذا لم تتوفر لا ينهار الطلب
+        const lang = preferredLang || 'ar'; 
+        urlObj.searchParams.set('token', token);
+        urlObj.searchParams.set('expires', expires);
         // تم تغيير اللغة الافتراضية هنا لتكون العربية بقوة
         const lang = preferredLang || 'ar'; 
         urlObj.searchParams.set('token', token);
         urlObj.searchParams.set('expires', expires);
-        urlObj.searchParams.set('lang', lang);
+        if (asn) urlObj.searchParams.set('asn', asn);
+        if (canPlayFHD) urlObj.searchParams.set('h', '1');
+
+        let finalStreamUrl = urlObj.toString();
         if (asn) urlObj.searchParams.set('asn', asn);
         if (canPlayFHD) urlObj.searchParams.set('h', '1');
 
