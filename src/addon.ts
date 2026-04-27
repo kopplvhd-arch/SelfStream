@@ -83,11 +83,9 @@ builder.defineStreamHandler(async (args: any) => {
 const app = express();
 app.set('trust proxy', true);
 
-// تصحيح الاستدعاء هنا بإضافة 3 معاملات
 app.get('/', async (req: any, res: any) => {
     const configToken = req.query.token || "";
     const userConfig = configToken ? decodeConfig(configToken) : DEFAULT_CONFIG;
-    // تم تمرير userConfig, manifest, و configToken ليتطابق مع landing.ts
     res.send(generateLandingPage(userConfig, manifest, configToken));
 });
 
@@ -103,9 +101,10 @@ app.get('/:token/stream/:type/:id.json', async (req: any, res: any) => {
 app.get('/proxy/hls/manifest.m3u8', async (req: any, res: any) => {
     const token = req.query.token;
     if (!token) return res.status(400).send("No token");
-    const { url, headers } = decodeProxyToken(token as string);
+    const decoded = decodeProxyToken(token as string);
+    // تصحيح الأخطاء هنا باستخدام u و h
     try {
-        const { body } = await request(url, { headers });
+        const { body } = await request(decoded.u, { headers: decoded.h });
         res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
         await pipeline(body, res);
     } catch (e) { res.status(500).send("Proxy error"); }
