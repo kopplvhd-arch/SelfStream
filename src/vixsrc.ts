@@ -139,7 +139,8 @@ export async function getVixSrcStreams(tmdbId: string, season?: string, episode?
         console.log(`[VixSrc] Final stream URL: ${finalStreamUrl}`);
 
         // 5. Wrap through local HLS proxy
-        const proxyToken = makeProxyToken({ u: finalStreamUrl, h: VIXSRC_HEADERS });
+        // 5. Wrap through local HLS proxy
+const proxyToken = makeProxyToken(finalStreamUrl, VIXSRC_HEADERS);
 
         return [{
             name: "SelfStream 🇸🇦",
