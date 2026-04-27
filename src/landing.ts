@@ -1,22 +1,19 @@
-import { AVAILABLE_LANGUAGES, DEFAULT_CONFIG } from './config';
+import { AVAILABLE_LANGUAGES, DEFAULT_CONFIG, UserConfig } from './config';
 
-export function generateLandingPage(userConfig: any, manifest: any, configToken: string): string {
+export function generateLandingPage(userConfig: UserConfig, manifest: any, configToken: string): string {
     const langOptions = AVAILABLE_LANGUAGES.map(l =>
         '<option value="' + l.code + '"' + (l.code === DEFAULT_CONFIG.vixLang ? ' selected' : '') + '>' + l.flag + ' ' + l.label + '</option>'
     ).join('\n');
 
-    const addonBase = ""; // سيتم تحديده تلقائياً من المسار
-    const addonBaseJson = JSON.stringify(addonBase);
-
-    return '<!DOCTYPE html>' +
-'<html lang="ar" dir="rtl">' + // تحويل الاتجاه للعربية
-'<head>' +
-'<meta charset="UTF-8">' +
-'<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
-'<title>' + manifest.name + ' - التثبيت</title>' +
-'<link rel="icon" href="' + manifest.logo + '">' +
-'<link href="https://googleapis.com" rel="stylesheet">' +
-`<style>
+    return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${manifest.name} - التثبيت</title>
+<link rel="icon" href="${manifest.logo}">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+<style>
 :root{--primary:#8A5AAB;--primary-hover:#724191;--bg:#0f0f12;--glass:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.1);--text:#fff;--text-muted:rgba(255,255,255,0.7)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Cairo','Inter',sans-serif;background-color:var(--bg);background-image:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.8)),url('https://i.imgur.com/uasXEWM.jpeg');background-size:cover;background-position:center;background-attachment:fixed;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow-x:hidden}
@@ -32,23 +29,32 @@ p.description{font-size:16px;color:var(--text-muted);line-height:1.6;margin-bott
 .btn-primary{background-color:var(--primary);color:#fff}
 .btn-primary:hover{background-color:var(--primary-hover);transform:translateY(-2px);box-shadow:0 5px 15px rgba(138,90,171,.4)}
 .btn-secondary{background-color:var(--glass-border);color:#fff}
+.btn-secondary:hover{background-color:rgba(255,255,255,.15);transform:translateY(-2px)}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:rgba(138,90,171,.9);color:#fff;padding:10px 24px;border-radius:50px;font-weight:500;transition:transform .3s ease-out;z-index:1000}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .config-section{margin-bottom:28px;text-align:right}
-.config-section h2{font-size:18px;margin-bottom:16px;color:var(--text-muted);text-align:center}
-.source-row{background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:14px;padding:16px;margin-bottom:12px}
-.source-header{display:flex;align-items:center;justify-content:space-between;flex-direction: row-reverse;}
+.config-section h2{font-size:18px;margin-bottom:16px;color:var(--text-muted);text-align:center;font-weight:700;}
+.source-row{background:rgba(255,255,255,.04);border:1px solid var(--glass-border);border-radius:14px;padding:16px;margin-bottom:12px;transition:all .3s ease}
+.source-header{display:flex;align-items:center;justify-content:space-between;flex-direction:row-reverse;}
 .source-label{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px}
-.lang-select{width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.08);color:#fff;margin-top:10px}
+.source-badge{font-size:11px;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.1);color:var(--text-muted)}
+.toggle{position:relative;width:48px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.15);border-radius:26px;transition:.3s}
+.toggle-slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked+.toggle-slider{background:var(--primary)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(22px)}
+.lang-select{width:100%;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.08);color:#fff;border:1px solid var(--glass-border);font-family:'Cairo',sans-serif;margin-top:10px;outline:none;}
+.lang-select option{background:#1a1a2e;color:#fff}
 </style>
 </head>
 <body>
 <div class="container">
 <div class="card">
-<img src="' + manifest.logo + '" alt="Logo" class="logo">
-<h1>' + manifest.name + '</h1>
-<span class="version">v' + manifest.version + '</span>
-<p class="description">' + manifest.description + '</p>
+<img src="${manifest.logo}" alt="Logo" class="logo">
+<h1>${manifest.name}</h1>
+<span class="version">v${manifest.version}</span>
+<p class="description">${manifest.description}</p>
 
 <div class="config-section">
 <h2>⚙️ إعدادات المصادر</h2>
@@ -58,7 +64,7 @@ p.description{font-size:16px;color:var(--text-muted);line-height:1.6;margin-bott
         <span class="source-label">📺 ViX <span class="source-badge">متعدد اللغات</span></span>
         <label class="toggle"><input type="checkbox" id="vixEnabled" checked><span class="toggle-slider"></span></label>
     </div>
-    <select id="vixLang" class="lang-select">` + langOptions + `</select>
+    <select id="vixLang" class="lang-select">${langOptions}</select>
 </div>
 
 <div class="source-row" id="cc-row">
@@ -66,7 +72,7 @@ p.description{font-size:16px;color:var(--text-muted);line-height:1.6;margin-bott
         <span class="source-label">🎬 CinemaCity <span class="source-badge">دعم الترجمة</span></span>
         <label class="toggle"><input type="checkbox" id="cinemacityEnabled" checked><span class="toggle-slider"></span></label>
     </div>
-    <select id="cinemacityLang" class="lang-select">` + langOptions + `</select>
+    <select id="cinemacityLang" class="lang-select">${langOptions}</select>
 </div>
 
 </div>
@@ -81,7 +87,8 @@ p.description{font-size:16px;color:var(--text-muted);line-height:1.6;margin-bott
 <div id="toast" class="toast">تم نسخ الرابط!</div>
 
 <script>
-function getConfig(){
+// وظيفة لقراءة التكوين الحالي من الواجهة
+function getConfig() {
     return {
         vixEnabled: document.getElementById('vixEnabled').checked,
         vixLang: document.getElementById('vixLang').value,
@@ -91,24 +98,44 @@ function getConfig(){
     };
 }
 
-function encodeConfig(cfg){
-    return btoa(JSON.stringify(cfg)).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/g,'');
+// دالة لتشفير التكوين بصيغة Base64url متوافقة مع الخادم
+function encodeConfig(cfg) {
+    var str = JSON.stringify(cfg);
+    // تحويل السلاسل النصية لتدعم التشفير الآمن ثم تطبيق Base64url
+    return btoa(unescape(encodeURIComponent(str)))
+        .replace(/\\+/g, '-')
+        .replace(/\\//g, '_')
+        .replace(/=+$/, '');
 }
 
-function updateLinks(){
-    var url = window.location.origin + '/' + encodeConfig(getConfig()) + '/manifest.json';
-    document.getElementById('install_button').href = 'stremio://' + url.replace('https://','').replace('http://','');
+// بناء الرابط الديناميكي بناءً على دومين الموقع الحالي
+function getManifestUrl() {
+    var base = window.location.origin;
+    var token = encodeConfig(getConfig());
+    return base + '/' + token + '/manifest.json';
 }
 
-document.querySelectorAll('input, select').forEach(el => el.onchange = updateLinks);
-updateLinks();
-
-function copyManifest(){
-    var url = window.location.origin + '/' + encodeConfig(getConfig()) + '/manifest.json';
-    navigator.clipboard.writeText(url);
+function showToast(msg) {
     var t = document.getElementById('toast');
-    t.className = 'toast show';
-    setTimeout(()=>t.className='toast', 2000);
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+
+// ربط زر التثبيت برابط stremio:// الديناميكي
+document.getElementById('install_button').addEventListener('click', function(e) {
+    e.preventDefault();
+    var url = getManifestUrl();
+    // تحويل الرابط إلى بروتوكول stremio مع إزالة http/https
+    window.location.href = 'stremio://' + url.replace(/^https?:\\/\\//, '');
+});
+
+// دالة نسخ الرابط
+function copyManifest() {
+    var url = getManifestUrl();
+    navigator.clipboard.writeText(url).then(function() { 
+        showToast('تم نسخ الرابط بنجاح!'); 
+    });
 }
 </script>
 </body>
