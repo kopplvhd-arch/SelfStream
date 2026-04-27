@@ -85,8 +85,6 @@ export async function getVixSrcStreams(tmdbId: string, season?: string, episode?
         const scriptContent = scriptTag.html() || '';
         if (!scriptContent) throw new Error("VixSrc player script not found.");
 
-        // Extraction based on the new masterPlaylist structure
-        // window.masterPlaylist = { params: { 'token': '...', 'expires': '...', 'asn': '...' }, url: '...' }
         let token = '';
         let expires = '';
         let asn = '';
@@ -110,7 +108,8 @@ export async function getVixSrcStreams(tmdbId: string, season?: string, episode?
         const canPlayFHD = /window\.canPlayFHD\s*=\s*true/i.test(scriptContent) || /canPlayFHD/.test(scriptContent);
         
         const urlObj = new URL(serverUrl);
-        const lang = preferredLang || 'en';
+        // تم تغيير اللغة الافتراضية هنا من en إلى ar لضمان طلب الدبلجة العربية أولاً
+        const lang = preferredLang || 'ar'; 
         urlObj.searchParams.set('token', token);
         urlObj.searchParams.set('expires', expires);
         urlObj.searchParams.set('lang', lang);
@@ -119,7 +118,7 @@ export async function getVixSrcStreams(tmdbId: string, season?: string, episode?
 
         let finalStreamUrl = urlObj.toString();
 
-        // 4. Ensure .m3u8 extension in the path if necessary (as seen in the original code)
+        // 4. Ensure .m3u8 extension in the path
         const parts = urlObj.pathname.split('/');
         const pIdx = parts.indexOf('playlist');
         if (pIdx !== -1 && pIdx < parts.length - 1) {
@@ -137,8 +136,8 @@ export async function getVixSrcStreams(tmdbId: string, season?: string, episode?
         const proxyToken = makeProxyToken(finalStreamUrl, VIXSRC_HEADERS);
 
         return [{
-            name: "SC 🤌",
-            title: "VIX 1080 🤌",
+            name: "SelfStream 🇸🇦", // اسم الإضافة بالعربي للتمييز
+            title: "🎬 جودة عالية | دبلجة وترجمة عربية 🤌", // وصف الرابط بالعربي
             url: `/proxy/hls/manifest.m3u8?token=${proxyToken}`
         }];
 
