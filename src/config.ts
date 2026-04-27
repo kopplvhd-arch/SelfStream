@@ -5,46 +5,13 @@ export const config = {
 };
 
 export const AVAILABLE_LANGUAGES = [
-  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' }, // أصبحت العربية هي الخيار الأول والافتراضي
   { code: 'en', label: 'English', flag: '🇬🇧' },
-  { code: 'es', label: 'Español (España)', flag: '🇪🇸' },
-  { code: 'es-419', label: 'Español (Latinoamérica)', flag: '🇲🇽' },
-  { code: 'fr', label: 'Français (France)', flag: '🇫🇷' },
-  { code: 'fr-ca', label: 'Français (Canada)', flag: '🇨🇦' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
   { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
-  { code: 'pt', label: 'Português (Portugal)', flag: '🇵🇹' },
-  { code: 'pt-br', label: 'Português (Brasil)', flag: '🇧🇷' },
-  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-  { code: 'ja', label: '日本語', flag: '🇯🇵' },
-  { code: 'ko', label: '한국어', flag: '🇰🇷' },
-  { code: 'zh', label: '中文 (简体)', flag: '🇨🇳' },
-  { code: 'zh-tw', label: '中文 (繁體)', flag: '🇹🇼' },
-  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
-  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳' },
-  { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
-  { code: 'pl', label: 'Polski', flag: '🇵🇱' },
-  { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
-  { code: 'ro', label: 'Română', flag: '🇷🇴' },
-  { code: 'el', label: 'Ελληνικά', flag: '🇬🇷' },
-  { code: 'he', label: 'עברית', flag: '🇮🇱' },
-  { code: 'hu', label: 'Magyar', flag: '🇭🇺' },
-  { code: 'cs', label: 'Čeština', flag: '🇨🇿' },
-  { code: 'da', label: 'Dansk', flag: '🇩🇰' },
-  { code: 'fi', label: 'Suomi', flag: '🇫🇮' },
-  { code: 'sv', label: 'Svenska', flag: '🇸🇪' },
-  { code: 'no', label: 'Norsk', flag: '🇳🇴' },
-  { code: 'id', label: 'Bahasa Indonesia', flag: '🇮🇩' },
-  { code: 'ms', label: 'Bahasa Melayu', flag: '🇲🇾' },
-  { code: 'fil', label: 'Filipino', flag: '🇵🇭' },
-  { code: 'th', label: 'ไทย', flag: '🇹🇭' },
-  { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
-  { code: 'ca', label: 'Català', flag: '🏴' },
-  { code: 'eu', label: 'Euskara', flag: '🏴' },
-  { code: 'gl', label: 'Galego', flag: '🏴' },
-  { code: 'ta', label: 'தமிழ்', flag: '🇮🇳' },
-  { code: 'te', label: 'తెలుగు', flag: '🇮🇳' },
-  { code: 'kn', label: 'ಕನ್ನಡ', flag: '🇮🇳' },
-  { code: 'ml', label: 'മലയാളം', flag: '🇮🇳' }
+  { code: 'tr', label: 'Türkçe', flag: '🇹🇷' }
+  // تم حذف الإيطالية نهائياً من هنا لضمان عدم ظهورها في الواجهة
 ];
 
 export interface UserConfig {
@@ -58,7 +25,7 @@ export interface UserConfig {
 export const DEFAULT_CONFIG: UserConfig = {
   vixEnabled: true,
   vixLang: 'ar',
-  cinemacityEnabled: true, // disabled — Cloudflare bypass no longer viable
+  cinemacityEnabled: true, 
   cinemacityLang: 'ar',
   animeunityEnabled: false
 };
@@ -69,12 +36,13 @@ export function encodeConfig(cfg: UserConfig): string {
 
 export function decodeConfig(token: string): UserConfig {
   try {
+    // قمنا بتعديل هذه الدالة لتجبر الإضافة على استخدام العربية حتى لو كان الرابط قديماً
     const parsed = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
     return {
-      vixEnabled: parsed.vixEnabled === true,
-      vixLang: parsed.vixLang || DEFAULT_CONFIG.vixLang,
-      cinemacityEnabled: parsed.cinemacityEnabled === true,
-      cinemacityLang: parsed.cinemacityLang || DEFAULT_CONFIG.cinemacityLang,
+      vixEnabled: true, 
+      vixLang: 'ar',    // إجبار العربية للصوت
+      cinemacityEnabled: true, 
+      cinemacityLang: 'ar', // إجبار العربية للترجمة
       animeunityEnabled: parsed.animeunityEnabled === true
     };
   } catch {
