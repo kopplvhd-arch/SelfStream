@@ -49,3 +49,26 @@ export function decodeConfig(token: string): UserConfig {
     return { ...DEFAULT_CONFIG };
   }
 }
+export const DEFAULT_CONFIG: UserConfig = {
+  vixEnabled: true,
+  vixLang: 'ar', // إجبار المحرك الأول على العربية
+  cinemacityEnabled: true, // إجبار تشغيل المحرك المعطل (سينما سيتي)
+  cinemacityLang: 'ar', // إجبار المحرك الثاني على العربية
+  animeunityEnabled: false
+};
+
+export function decodeConfig(token: string): UserConfig {
+  try {
+    // هذه الحركة ستجعل الإضافة تتجاهل أي رابط إيطالي قديم وتطبق العربي غصب
+    return {
+      vixEnabled: true,
+      vixLang: 'ar', 
+      cinemacityEnabled: true, 
+      cinemacityLang: 'ar',
+      animeunityEnabled: false
+    };
+  } catch {
+    return { ...DEFAULT_CONFIG };
+  }
+}
+
