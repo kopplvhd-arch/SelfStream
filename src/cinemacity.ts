@@ -162,8 +162,8 @@ export async function getCinemaCityStreams(type: string, id: string, season?: nu
         if (!streamUrl) return [];
 
         return [{
-            name: 'CinemaCity 🤌',
-            title: `🎬 High Quality Stream\n💬 Arabic Subtitles Support`,
+            name: 'CinemaCity 🇸🇦',
+            title: `🎬 جودة عالية\n💬 دعم الترجمة العربية 🤌`,
             url: streamUrl,
             subtitles: parseSubtitles(subtitleStr)
         }];
