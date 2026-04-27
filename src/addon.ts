@@ -57,7 +57,8 @@ async function handleStream(type: string, id: string, userConfig: UserConfig): P
             mediaTitle = r?.title || r?.name || '';
         } catch { }
 
-        const vixStreams = await getVixSrcStreams(tmdbId, season, episode, 'ar');
+        // التعديل الصحيح للسطر 60
+const streams = await getVixSrcStreams(args.id, args.type);
         for (const s of vixStreams) {
             s.name = 'VixSrc 🇸🇦';
             s.title = `🎬 ${mediaTitle}\n🔊 صوت عربي/إنجليزي`;
