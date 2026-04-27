@@ -1,161 +1,68 @@
-import * as cheerio from 'cheerio';
-import { request } from 'undici';
-import { config } from './config';
-import { makeProxyToken, VIXSRC_HEADERS } from './proxy';
+import { Stream } from "./types";
+import { makeProxyToken } from "./proxy";
 
-/**
- * Resolve the current embed URL through VixSrc JSON API.
- */
-async function getEmbedUrlFromApi(tmdbId: string, season?: string, episode?: string): Promise<string | null> {
-    const siteOrigin = `https://${config.vixsrcDomain}`;
-    let apiPath = "";
+// الترويسات اللازمة للمشغل
+const VIXSRC_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Referer': 'https://vixcloud.co/',
+    'Origin': 'https://vixcloud.co'
+};
 
-    if (season && episode) {
-        apiPath = `/api/tv/${tmdbId}/${season}/${episode}`;
-    } else {
-        apiPath = `/api/movie/${tmdbId}`;
-    }
-
-    const apiUrl = `${siteOrigin}${apiPath}`;
-    console.log(`[VixSrc] Fetching embed via API: ${apiUrl}`);
-
+export async function getVixSrcStreams(imdbId: string, type: string, preferredLang?: string): Promise<Stream[]> {
     try {
-        const { body, statusCode } = await request(apiUrl, {
-            headers: {
-                ...VIXSRC_HEADERS,
-                'Accept': 'application/json, text/plain, */*',
-                'Referer': `${siteOrigin}/`
-            }
+        // 1. تحديد الرابط بناءً على النوع (فيلم أو مسلسل)
+        const baseUrl = "https://vixapi.com/api/source";
+        const response = await fetch(`${baseUrl}/${type}/${imdbId}`, {
+            headers: VIXSRC_HEADERS
         });
 
-        if (statusCode !== 200) {
-            console.log(`[VixSrc] API responded with status ${statusCode}`);
-            return null;
+        if (!response.ok) return [];
+
+        const data = await response.json();
+        if (!data || !data.data || !data.data.sources) return [];
+
+        const streams: Stream[] = [];
+
+        // 2. معالجة السيرفرات المستخرجة
+        for (const source of data.data.sources) {
+            const serverUrl = source.file;
+            const token = data.data.token;
+            const expires = data.data.expires;
+            const asn = data.data.asn;
+            const canPlayFHD = source.label === '1080p';
+
+            // 3. بناء رابط المشغل النهائي مع دعم اللغة
+            const urlObj = new URL(serverUrl);
+            const targetLang = preferredLang || 'ar'; 
+
+            urlObj.searchParams.set('token', token);
+            urlObj.searchParams.set('expires', expires);
+            urlObj.searchParams.set('lang', targetLang);
+            
+            if (asn) urlObj.searchParams.set('asn', asn);
+            if (canPlayFHD) urlObj.searchParams.set('h', '1');
+
+            const finalStreamUrl = urlObj.toString();
+
+            // 4. تشفير الرابط عبر البروكسي المحلي لتجاوز الحجب
+            const proxyToken = makeProxyToken(finalStreamUrl, VIXSRC_HEADERS);
+
+            streams.push({
+                name: `VixSrc (AR/Multi)`,
+                title: `${source.label} - High Speed Server`,
+                url: `/proxy/hls/${proxyToken}/playlist.m3u8`,
+                behaviorHints: {
+                    notWebReady: true,
+                    proxyHeaders: {
+                        "request": VIXSRC_HEADERS
+                    }
+                }
+            });
         }
 
-        const data: any = await body.json();
-        const embedPath = data?.src;
-        if (!embedPath) {
-            console.log(`[VixSrc] No 'src' field in API response`);
-            return null;
-        }
-
-        return embedPath.startsWith('http') ? embedPath : `${siteOrigin}${embedPath}`;
-    } catch (err) {
-        console.error(`[VixSrc] API error:`, err);
-        return null;
-    }
-}
-
-export async function getVixSrcStreams(tmdbId: string, season?: string, episode?: string, preferredLang?: string): Promise<{name: string, title: string, url: string}[]> {
-    // تحقق صارم من أن الـ ID غير فارغ لتجنب الأخطاء
-    if (!tmdbId || tmdbId.trim() === '') {
-        console.log("[VixSrc] Invalid or empty TMDB ID provided.");
-        return [];
-    }
-
-    try {
-        const siteOrigin = `https://${config.vixsrcDomain}`;
-        
-        // 1. Resolve embed URL through API
-        const embedUrl = await getEmbedUrlFromApi(tmdbId, season, episode);
-        if (!embedUrl) {
-            console.log("[VixSrc] Failed to resolve embed URL");
-            return [];
-        }
-
-        console.log("[VixSrc] Embed URL resolved:", embedUrl);
-
-        // 2. Fetch embed page and extract parameters
-        const { body, statusCode } = await request(embedUrl, {
-            headers: {
-                ...VIXSRC_HEADERS,
-                'Referer': `${siteOrigin}/`
-            }
-        });
-
-        if (statusCode !== 200) {
-            console.log(`[VixSrc] Embed page fetch failed: ${statusCode}`);
-            return [];
-        }
-
-        const html = await body.text();
-        const $ = cheerio.load(html);
-
-        // Find the script containing window.masterPlaylist or the token parameters
-        const scriptTag = $("script").filter((_, el) => {
-            const content = $(el).html() || '';
-            return content.includes('window.masterPlaylist') || (content.includes("'token':") && content.includes("'expires':"));
-        }).first();
-
-        const scriptContent = scriptTag.html() || '';
-        if (!scriptContent) throw new Error("VixSrc player script not found.");
-
-        let token = '';
-        let expires = '';
-        let asn = '';
-        let serverUrl = '';
-
-        const tokenMatch = scriptContent.match(/['"]token['"]\s*:\s*['"]([^'"]+)['"]/);
-        const expiresMatch = scriptContent.match(/['"]expires['"]\s*:\s*['"](\d+)['"]/);
-        const asnMatch = scriptContent.match(/['"]asn['"]\s*:\s*['"]([^'"]*)['"]/);
-        const urlMatch = scriptContent.match(/url\s*:\s*['"]([^'"]+)['"]/);
-
-        if (tokenMatch) token = tokenMatch[1];
-        if (expiresMatch) expires = expiresMatch[1];
-        if (asnMatch) asn = asnMatch[1];
-        if (urlMatch) serverUrl = urlMatch[1].replace(/\\/g, '');
-
-        if (!token || !expires || !serverUrl) {
-            throw new Error("Failed to extract mandatory parameters from VixSrc script.");
-        }
-
-        // 3. Construct final stream URL
-        const canPlayFHD = /window\.canPlayFHD\s*=\s*true/i.test(scriptContent) || /canPlayFHD/.test(scriptContent);
-        
-        // الأفضل جعلها تحاول جلب العربية، وإذا لم تتوفر لا ينهار الطلب
-        const lang = preferredLang || 'ar'; 
-        urlObj.searchParams.set('token', token);
-        urlObj.searchParams.set('expires', expires);
-        // تم تغيير اللغة الافتراضية هنا لتكون العربية بقوة
-        const lang = preferredLang || 'ar'; 
-        urlObj.searchParams.set('token', token);
-        urlObj.searchParams.set('expires', expires);
-        if (asn) urlObj.searchParams.set('asn', asn);
-        if (canPlayFHD) urlObj.searchParams.set('h', '1');
-
-        let finalStreamUrl = urlObj.toString();
-        if (asn) urlObj.searchParams.set('asn', asn);
-        if (canPlayFHD) urlObj.searchParams.set('h', '1');
-
-        let finalStreamUrl = urlObj.toString();
-
-        // 4. Ensure .m3u8 extension in the path
-        const parts = urlObj.pathname.split('/');
-        const pIdx = parts.indexOf('playlist');
-        if (pIdx !== -1 && pIdx < parts.length - 1) {
-            let nextPart = parts[pIdx + 1];
-            if (nextPart && !nextPart.includes('.')) {
-                parts[pIdx + 1] = nextPart + '.m3u8';
-                urlObj.pathname = parts.join('/');
-                finalStreamUrl = urlObj.toString();
-            }
-        }
-
-        console.log(`[VixSrc] Final stream URL: ${finalStreamUrl}`);
-
-        // 5. Wrap through local HLS proxy
-        // 5. Wrap through local HLS proxy
-const proxyToken = makeProxyToken(finalStreamUrl, VIXSRC_HEADERS);
-
-        return [{
-            name: "SelfStream 🇸🇦",
-            title: "🎬 جودة عالية | دبلجة وترجمة عربية 🤌",
-            url: `/proxy/hls/manifest.m3u8?token=${proxyToken}`
-        }];
-
-    } catch(err) {
-        console.error("VixSrc Stream extraction error", err);
+        return streams;
+    } catch (error) {
+        console.error("[VixSrc Error]:", error);
         return [];
     }
 }
