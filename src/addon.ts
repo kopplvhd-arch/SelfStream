@@ -67,8 +67,8 @@ async function handleStream(type: string, id: string, userConfig: UserConfig): P
         } catch { }
 
         // VixSrc
-        const streams = await getVixSrcStreams(args.id, args.type);
-        for (const s of vixStreams) {
+      const streams = await getVixSrcStreams(arg.id, arg.type);
+return { streams: streams };
             s.name = 'VixSrc 🇸🇦';
             s.title = `🎬 ${mediaTitle}\n🔊 صوت عربي/إنجليزي`;
             allStreams.push(s);
