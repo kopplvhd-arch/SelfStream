@@ -1,5 +1,5 @@
 export const config = {
-  tmdbApiKey: process.env.TMDB_API_KEY || "1865f43a0549ca50d341dd9ab8b29f49",
+  tmdbApiKey: process.env.TMDB_API_KEY || "b096c120b92a660f423106f179d41347",
   vixsrcDomain: "vixsrc.to",
   vixcloudDomain: "vixcloud.co"
 };
