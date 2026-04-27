@@ -48,6 +48,12 @@ async function getEmbedUrlFromApi(tmdbId: string, season?: string, episode?: str
 }
 
 export async function getVixSrcStreams(tmdbId: string, season?: string, episode?: string, preferredLang?: string): Promise<{name: string, title: string, url: string}[]> {
+    // تحقق صارم من أن الـ ID غير فارغ لتجنب الأخطاء
+    if (!tmdbId || tmdbId.trim() === '') {
+        console.log("[VixSrc] Invalid or empty TMDB ID provided.");
+        return [];
+    }
+
     try {
         const siteOrigin = `https://${config.vixsrcDomain}`;
         
@@ -108,7 +114,7 @@ export async function getVixSrcStreams(tmdbId: string, season?: string, episode?
         const canPlayFHD = /window\.canPlayFHD\s*=\s*true/i.test(scriptContent) || /canPlayFHD/.test(scriptContent);
         
         const urlObj = new URL(serverUrl);
-        // تم تغيير اللغة الافتراضية هنا من en إلى ar لضمان طلب الدبلجة العربية أولاً
+        // تم تغيير اللغة الافتراضية هنا لتكون العربية بقوة
         const lang = preferredLang || 'ar'; 
         urlObj.searchParams.set('token', token);
         urlObj.searchParams.set('expires', expires);
@@ -133,11 +139,11 @@ export async function getVixSrcStreams(tmdbId: string, season?: string, episode?
         console.log(`[VixSrc] Final stream URL: ${finalStreamUrl}`);
 
         // 5. Wrap through local HLS proxy
-        const proxyToken = makeProxyToken(finalStreamUrl, VIXSRC_HEADERS);
+        const proxyToken = makeProxyToken({ u: finalStreamUrl, h: VIXSRC_HEADERS });
 
         return [{
-            name: "SelfStream 🇸🇦", // اسم الإضافة بالعربي للتمييز
-            title: "🎬 جودة عالية | دبلجة وترجمة عربية 🤌", // وصف الرابط بالعربي
+            name: "SelfStream 🇸🇦",
+            title: "🎬 جودة عالية | دبلجة وترجمة عربية 🤌",
             url: `/proxy/hls/manifest.m3u8?token=${proxyToken}`
         }];
 
