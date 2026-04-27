@@ -171,7 +171,7 @@ function pickStream(fileData: any, type: string, season: number = 1, episode: nu
     for (const s of fileData) {
         if (!s || typeof s !== 'object' || !s.folder) continue;
         const title = (s.title || '').toLowerCase();
-        const seasonRegex = new RegExp(`(?:season|stagione|s)\\s*0*${season}\\b`, 'i');
+        const seasonRegex = new RegExp(`(?:season|s)\\s*0*${season}\\b`, 'i');
         if (seasonRegex.test(title)) {
             selectedSeasonFolder = s.folder;
             break;
@@ -193,7 +193,7 @@ function pickStream(fileData: any, type: string, season: number = 1, episode: nu
     for (const e of selectedSeasonFolder) {
         if (!e || typeof e !== 'object' || !e.file) continue;
         const title = (e.title || '').toLowerCase();
-        const epRegex = new RegExp(`(?:episode|episodio|e)\\s*0*${episode}\\b`, 'i');
+        const epRegex = new RegExp(`(?:episode|e)\\s*0*${episode}\\b`, 'i');
         if (epRegex.test(title)) {
             selectedEpisodeFile = e.file;
             break;
