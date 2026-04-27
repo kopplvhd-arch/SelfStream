@@ -57,9 +57,9 @@ export interface UserConfig {
 
 export const DEFAULT_CONFIG: UserConfig = {
   vixEnabled: true,
-  vixLang: 'en',
-  cinemacityEnabled: false, // disabled — Cloudflare bypass no longer viable
-  cinemacityLang: 'en',
+  vixLang: 'ar',
+  cinemacityEnabled: true, // disabled — Cloudflare bypass no longer viable
+  cinemacityLang: 'ar',
   animeunityEnabled: false
 };
 
